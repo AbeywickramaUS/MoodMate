@@ -6,6 +6,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Text, View } from 'react-native';
 
 import { AppProvider } from './src/context/AppContext';
+import { LocationProvider } from './src/context/LocationContext';
 import HomeScreen from './src/screens/HomeScreen';
 import MoodInputScreen from './src/screens/MoodInputScreen';
 import RecommendationScreen from './src/screens/RecommendationScreen';
@@ -79,31 +80,33 @@ function MainTabs() {
 export default function App() {
   return (
     <AppProvider>
-      <NavigationContainer>
-        <Stack.Navigator
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: '#0F172A' },
-          }}
-        >
-          <Stack.Screen name="MainTabs" component={MainTabs} />
-          <Stack.Screen
-            name="MoodInput"
-            component={MoodInputScreen}
-            options={{
-              animation: 'slide_from_bottom',
+      <LocationProvider>
+        <NavigationContainer>
+          <Stack.Navigator
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: '#0F172A' },
             }}
-          />
-          <Stack.Screen
-            name="Recommendation"
-            component={RecommendationScreen}
-            options={{
-              animation: 'slide_from_right',
-            }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-      <StatusBar style="light" />
+          >
+            <Stack.Screen name="MainTabs" component={MainTabs} />
+            <Stack.Screen
+              name="MoodInput"
+              component={MoodInputScreen}
+              options={{
+                animation: 'slide_from_bottom',
+              }}
+            />
+            <Stack.Screen
+              name="Recommendation"
+              component={RecommendationScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+        <StatusBar style="light" />
+      </LocationProvider>
     </AppProvider>
   );
 }

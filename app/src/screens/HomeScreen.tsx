@@ -8,12 +8,17 @@ import {
     Dimensions
 } from 'react-native';
 import { useApp } from '../context/AppContext';
-import { MOODS } from '../data/features';
+import { useLocation } from '../context/LocationContext';
+import { MOODS, LOCATIONS } from '../data/features';
 
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }: any) {
     const { moodHistory, currentRiskLevel } = useApp();
+    const { currentLocation, isManualOverride, savedLocations } = useLocation();
+
+    const currentLocationData = LOCATIONS.find(l => l.id === currentLocation);
+    const hasSavedLocations = Object.values(savedLocations).some(v => v !== null);
 
     const getRiskColor = () => {
         switch (currentRiskLevel) {
@@ -59,6 +64,26 @@ export default function HomeScreen({ navigation }: any) {
                             currentRiskLevel === 'improving' ? 'Improving' : 'Stable'}
                     </Text>
                 </View>
+            </View>
+
+            {/* Current Location Card */}
+            <View style={styles.locationCard}>
+                <Text style={styles.locationCardIcon}>
+                    {hasSavedLocations ? currentLocationData?.icon : '📍'}
+                </Text>
+                <View style={styles.locationCardInfoHome}>
+                    <Text style={styles.locationCardLabel}>Currently at</Text>
+                    <Text style={styles.locationCardName}>
+                        {hasSavedLocations
+                            ? currentLocationData?.label || 'Unknown'
+                            : 'Location not set'}
+                    </Text>
+                </View>
+                {isManualOverride && (
+                    <View style={styles.manualBadge}>
+                        <Text style={styles.manualBadgeText}>Manual</Text>
+                    </View>
+                )}
             </View>
 
             {/* Quick Stats */}
@@ -154,6 +179,43 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         marginTop: 4,
+    },
+    locationCard: {
+        margin: 16,
+        marginTop: 12,
+        padding: 16,
+        backgroundColor: '#1E293B',
+        borderRadius: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    locationCardIcon: {
+        fontSize: 32,
+    },
+    locationCardInfoHome: {
+        marginLeft: 12,
+        flex: 1,
+    },
+    locationCardLabel: {
+        fontSize: 12,
+        color: '#94A3B8',
+    },
+    locationCardName: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#FFFFFF',
+        marginTop: 2,
+    },
+    manualBadge: {
+        backgroundColor: '#FB923C',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    manualBadgeText: {
+        color: '#FFFFFF',
+        fontSize: 11,
+        fontWeight: '600',
     },
     statsRow: {
         flexDirection: 'row',

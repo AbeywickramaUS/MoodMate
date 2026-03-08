@@ -6,14 +6,19 @@ import {
     ScrollView,
     TextInput,
     TouchableOpacity,
-    Alert
+    Alert,
+    ActivityIndicator,
 } from 'react-native';
 import { useApp } from '../context/AppContext';
-import { USER_GOALS, UserGoalType } from '../data/features';
+import { useLocation } from '../context/LocationContext';
+import { USER_GOALS, LOCATIONS, UserGoalType, LocationType } from '../data/features';
+import { getCurrentPosition } from '../utils/LocationService';
 
 export default function ProfileScreen() {
     const { userProfile, updateAllergies, updatePreferredGoal } = useApp();
+    const { savedLocations, saveLocation, clearLocation } = useLocation();
     const [newAllergy, setNewAllergy] = useState('');
+    const [savingLocation, setSavingLocation] = useState<LocationType | null>(null);
 
     const handleAddAllergy = () => {
         const trimmed = newAllergy.trim();
@@ -40,8 +45,50 @@ export default function ProfileScreen() {
         );
     };
 
+    const handleSaveCurrentLocation = async (type: LocationType) => {
+        setSavingLocation(type);
+        try {
+            const coords = await getCurrentPosition();
+            if (coords) {
+                await saveLocation(type, coords);
+                const locationLabel = LOCATIONS.find(l => l.id === type)?.label || type;
+                Alert.alert(
+                    '✅ Location Saved',
+                    `${locationLabel} has been saved at:\nLat: ${coords.latitude.toFixed(6)}\nLon: ${coords.longitude.toFixed(6)}`,
+                );
+            } else {
+                Alert.alert('Error', 'Could not get your current position. Please ensure location services are enabled.');
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Failed to save location. Please try again.');
+        } finally {
+            setSavingLocation(null);
+        }
+    };
+
+    const handleClearLocation = (type: LocationType) => {
+        const locationLabel = LOCATIONS.find(l => l.id === type)?.label || type;
+        Alert.alert(
+            'Clear Location',
+            `Remove saved coordinates for "${locationLabel}"?`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Clear',
+                    style: 'destructive',
+                    onPress: () => clearLocation(type),
+                },
+            ]
+        );
+    };
+
     const handleGoalSelect = (goal: UserGoalType) => {
         updatePreferredGoal(goal);
+    };
+
+    const formatCoords = (coords: { latitude: number; longitude: number } | null): string => {
+        if (!coords) return 'Not set';
+        return `${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`;
     };
 
     return (
@@ -49,6 +96,63 @@ export default function ProfileScreen() {
             <View style={styles.header}>
                 <Text style={styles.title}>Settings</Text>
                 <Text style={styles.subtitle}>Customize your experience</Text>
+            </View>
+
+            {/* Saved Locations Section */}
+            <View style={styles.section}>
+                <Text style={styles.sectionTitle}>📍 My Locations</Text>
+                <Text style={styles.sectionDescription}>
+                    Save your locations so the app can auto-detect where you are
+                </Text>
+
+                {LOCATIONS.map((location) => {
+                    const coords = savedLocations[location.id];
+                    const isSaving = savingLocation === location.id;
+                    const isSaved = coords !== null;
+
+                    return (
+                        <View key={location.id} style={styles.locationCard}>
+                            <View style={styles.locationCardHeader}>
+                                <Text style={styles.locationCardIcon}>{location.icon}</Text>
+                                <View style={styles.locationCardInfo}>
+                                    <Text style={styles.locationCardName}>{location.label}</Text>
+                                    <Text style={[
+                                        styles.locationCardStatus,
+                                        isSaved && styles.locationCardStatusSaved
+                                    ]}>
+                                        {isSaved ? `✓ ${formatCoords(coords)}` : 'Not set'}
+                                    </Text>
+                                </View>
+                            </View>
+                            <View style={styles.locationCardActions}>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.saveLocationButton,
+                                        isSaving && styles.saveLocationButtonDisabled,
+                                    ]}
+                                    onPress={() => handleSaveCurrentLocation(location.id)}
+                                    disabled={isSaving}
+                                >
+                                    {isSaving ? (
+                                        <ActivityIndicator size="small" color="#FFFFFF" />
+                                    ) : (
+                                        <Text style={styles.saveLocationButtonText}>
+                                            {isSaved ? '🔄 Update' : '📌 Save Current'}
+                                        </Text>
+                                    )}
+                                </TouchableOpacity>
+                                {isSaved && (
+                                    <TouchableOpacity
+                                        style={styles.clearLocationButton}
+                                        onPress={() => handleClearLocation(location.id)}
+                                    >
+                                        <Text style={styles.clearLocationButtonText}>✕</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        </View>
+                    );
+                })}
             </View>
 
             {/* Allergies Section */}
@@ -178,6 +282,75 @@ const styles = StyleSheet.create({
         color: '#64748B',
         marginBottom: 16,
     },
+    // Location cards
+    locationCard: {
+        backgroundColor: '#0F172A',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#334155',
+    },
+    locationCardHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    locationCardIcon: {
+        fontSize: 32,
+    },
+    locationCardInfo: {
+        marginLeft: 12,
+        flex: 1,
+    },
+    locationCardName: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#FFFFFF',
+    },
+    locationCardStatus: {
+        fontSize: 12,
+        color: '#64748B',
+        marginTop: 2,
+    },
+    locationCardStatusSaved: {
+        color: '#4ADE80',
+    },
+    locationCardActions: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    saveLocationButton: {
+        flex: 1,
+        backgroundColor: '#8B5CF6',
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 40,
+    },
+    saveLocationButtonDisabled: {
+        backgroundColor: '#6D28D9',
+    },
+    saveLocationButtonText: {
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    clearLocationButton: {
+        backgroundColor: '#DC2626',
+        paddingHorizontal: 14,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    clearLocationButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    // Allergies
     inputRow: {
         flexDirection: 'row',
         gap: 12,
@@ -232,6 +405,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontStyle: 'italic',
     },
+    // Goals
     goalsGrid: {
         gap: 12,
     },
