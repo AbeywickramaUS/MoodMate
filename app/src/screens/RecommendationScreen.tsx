@@ -128,7 +128,7 @@ export default function RecommendationScreen({ route, navigation }: any) {
             {/* Navigation */}
             <TouchableOpacity
                 style={styles.homeButton}
-                onPress={() => navigation.navigate('Home')}
+                onPress={() => navigation.navigate('MainTabs')}
             >
                 <Text style={styles.homeButtonText}>← Back to Home</Text>
             </TouchableOpacity>
