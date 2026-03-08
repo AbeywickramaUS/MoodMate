@@ -23,6 +23,7 @@ interface LocationContextType {
     isManualOverride: boolean;
     clearManualOverride: () => void;
     refreshLocation: () => Promise<void>;
+    leaveMeetingRoom: () => void;
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
@@ -181,6 +182,10 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
         setIsManualOverride(false);
     };
 
+    const leaveMeetingRoom = () => {
+        setCurrentLocation('office');
+    };
+
     const refreshLocation = async () => {
         setIsLocationLoading(true);
         try {
@@ -214,6 +219,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
                 isManualOverride,
                 clearManualOverride,
                 refreshLocation,
+                leaveMeetingRoom,
             }}
         >
             {children}

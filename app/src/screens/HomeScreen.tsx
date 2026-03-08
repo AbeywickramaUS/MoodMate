@@ -15,7 +15,7 @@ const { width } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }: any) {
     const { moodHistory, currentRiskLevel } = useApp();
-    const { currentLocation, isManualOverride, savedLocations } = useLocation();
+    const { currentLocation, isManualOverride, savedLocations, leaveMeetingRoom } = useLocation();
 
     const currentLocationData = LOCATIONS.find(l => l.id === currentLocation);
     const hasSavedLocations = Object.values(savedLocations).some(v => v !== null);
@@ -85,6 +85,18 @@ export default function HomeScreen({ navigation }: any) {
                     </View>
                 )}
             </View>
+
+            {/* Leave Meeting Room Button */}
+            {currentLocation === 'meeting_room' && (
+                <TouchableOpacity
+                    style={styles.leaveMeetingButton}
+                    onPress={leaveMeetingRoom}
+                >
+                    <Text style={styles.leaveMeetingButtonText}>
+                        🚪 Leave Meeting Room
+                    </Text>
+                </TouchableOpacity>
+            )}
 
             {/* Quick Stats */}
             <View style={styles.statsRow}>
@@ -188,6 +200,19 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         flexDirection: 'row',
         alignItems: 'center',
+    },
+    leaveMeetingButton: {
+        marginHorizontal: 16,
+        marginTop: 8,
+        backgroundColor: '#DC2626',
+        padding: 14,
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    leaveMeetingButtonText: {
+        color: '#FFFFFF',
+        fontSize: 15,
+        fontWeight: '600',
     },
     locationCardIcon: {
         fontSize: 32,
