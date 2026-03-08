@@ -1,0 +1,33 @@
+# ML Model files (too large for GitHub)
+*.pkl
+
+# Node modules
+node_modules/
+
+# Expo
+.expo/
+dist/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Metro
+.metro-health-check*
+
+# macOS
+.DS_Store
+
+# Environment
+.env
+.env.local
+
+# Logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# TypeScript
+*.tsbuildinfo
