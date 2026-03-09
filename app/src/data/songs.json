@@ -1,0 +1,46 @@
+{
+  "songs": {
+    "happy": [
+      { "title": "Happy", "artist": "Pharrell Williams", "genre": "Pop" },
+      { "title": "Walking on Sunshine", "artist": "Katrina & The Waves", "genre": "Pop Rock" },
+      { "title": "Good as Hell", "artist": "Lizzo", "genre": "Pop" },
+      { "title": "Uptown Funk", "artist": "Bruno Mars", "genre": "Funk Pop" },
+      { "title": "Can't Stop the Feeling!", "artist": "Justin Timberlake", "genre": "Pop" }
+    ],
+    "relaxed": [
+      { "title": "Weightless", "artist": "Marconi Union", "genre": "Ambient" },
+      { "title": "Sunset Lover", "artist": "Petit Biscuit", "genre": "Chill Electronic" },
+      { "title": "Put Your Records On", "artist": "Corinne Bailey Rae", "genre": "Soul" },
+      { "title": "Better Together", "artist": "Jack Johnson", "genre": "Acoustic" },
+      { "title": "Banana Pancakes", "artist": "Jack Johnson", "genre": "Acoustic" }
+    ],
+    "stress": [
+      { "title": "Breathe Me", "artist": "Sia", "genre": "Indie Pop" },
+      { "title": "Skinny Love", "artist": "Bon Iver", "genre": "Indie Folk" },
+      { "title": "Clair de Lune", "artist": "Claude Debussy", "genre": "Classical" },
+      { "title": "River Flows in You", "artist": "Yiruma", "genre": "Classical Piano" },
+      { "title": "Comptine d'un autre été", "artist": "Yann Tiersen", "genre": "Classical Piano" }
+    ],
+    "worry": [
+      { "title": "Three Little Birds", "artist": "Bob Marley", "genre": "Reggae" },
+      { "title": "Here Comes the Sun", "artist": "The Beatles", "genre": "Rock" },
+      { "title": "Don't Worry Be Happy", "artist": "Bobby McFerrin", "genre": "A Cappella" },
+      { "title": "Lean on Me", "artist": "Bill Withers", "genre": "Soul" },
+      { "title": "What a Wonderful World", "artist": "Louis Armstrong", "genre": "Jazz" }
+    ],
+    "frustration": [
+      { "title": "Lovely", "artist": "Billie Eilish", "genre": "Dark Pop" },
+      { "title": "Someone Like You", "artist": "Adele", "genre": "Pop Ballad" },
+      { "title": "Let It Be", "artist": "The Beatles", "genre": "Rock" },
+      { "title": "Fix You", "artist": "Coldplay", "genre": "Alternative Rock" },
+      { "title": "The Scientist", "artist": "Coldplay", "genre": "Alternative Rock" }
+    ],
+    "disappointment": [
+      { "title": "Heal", "artist": "Tom Odell", "genre": "Indie Pop" },
+      { "title": "Better Days", "artist": "OneRepublic", "genre": "Pop" },
+      { "title": "Unwritten", "artist": "Natasha Bedingfield", "genre": "Pop" },
+      { "title": "Rise Up", "artist": "Andra Day", "genre": "Soul" },
+      { "title": "Fight Song", "artist": "Rachel Platten", "genre": "Pop" }
+    ]
+  }
+}

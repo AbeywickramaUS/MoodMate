@@ -91,6 +91,10 @@ export default function ProfileScreen() {
         return `${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`;
     };
 
+    // Split goals into rows for the layout from screenshot
+    const topGoals = USER_GOALS.slice(0, 2);
+    const bottomGoals = USER_GOALS.slice(2);
+
     return (
         <ScrollView style={styles.container}>
             <View style={styles.header}>
@@ -102,7 +106,7 @@ export default function ProfileScreen() {
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>📍 My Locations</Text>
                 <Text style={styles.sectionDescription}>
-                    Save your locations so the app can auto-detect where you are
+                    Save your locations so the app can auto-detect where you are.
                 </Text>
 
                 {LOCATIONS.map((location) => {
@@ -112,7 +116,7 @@ export default function ProfileScreen() {
 
                     return (
                         <View key={location.id} style={styles.locationCard}>
-                            <View style={styles.locationCardHeader}>
+                            <View style={styles.locationCardLeft}>
                                 <Text style={styles.locationCardIcon}>{location.icon}</Text>
                                 <View style={styles.locationCardInfo}>
                                     <Text style={styles.locationCardName}>{location.label}</Text>
@@ -159,14 +163,14 @@ export default function ProfileScreen() {
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>🚫 Allergies & Restrictions</Text>
                 <Text style={styles.sectionDescription}>
-                    Recommendations will avoid activities that may conflict with these
+                    Define any allergies or restrictions so recommendations avoid conflicts.
                 </Text>
 
                 {/* Add Allergy Input */}
                 <View style={styles.inputRow}>
                     <TextInput
                         style={styles.textInput}
-                        placeholder="Enter allergy or restriction..."
+                        placeholder="Enter an allergy or restriction..."
                         placeholderTextColor="#64748B"
                         value={newAllergy}
                         onChangeText={setNewAllergy}
@@ -176,7 +180,7 @@ export default function ProfileScreen() {
                         style={styles.addButton}
                         onPress={handleAddAllergy}
                     >
-                        <Text style={styles.addButtonText}>Add</Text>
+                        <Text style={styles.addButtonText}>+ Add</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -206,8 +210,9 @@ export default function ProfileScreen() {
                     Recommendations will be tailored towards this goal
                 </Text>
 
-                <View style={styles.goalsGrid}>
-                    {USER_GOALS.map((goal) => (
+                {/* Top row - 2 goals */}
+                <View style={styles.goalsRow}>
+                    {topGoals.map((goal) => (
                         <TouchableOpacity
                             key={goal.id}
                             style={[
@@ -219,8 +224,30 @@ export default function ProfileScreen() {
                             <Text style={styles.goalIcon}>{goal.icon}</Text>
                             <Text style={styles.goalLabel}>{goal.label}</Text>
                             {userProfile.preferredGoal === goal.id && (
-                                <View style={styles.selectedBadge}>
-                                    <Text style={styles.selectedBadgeText}>✓</Text>
+                                <View style={styles.selectedCheckmark}>
+                                    <Text style={styles.selectedCheckmarkText}>✓</Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    ))}
+                </View>
+
+                {/* Bottom row - 3 goals */}
+                <View style={styles.goalsRow}>
+                    {bottomGoals.map((goal) => (
+                        <TouchableOpacity
+                            key={goal.id}
+                            style={[
+                                styles.goalCardSmall,
+                                userProfile.preferredGoal === goal.id && styles.goalCardSelected
+                            ]}
+                            onPress={() => handleGoalSelect(goal.id)}
+                        >
+                            <Text style={styles.goalIconSmall}>{goal.icon}</Text>
+                            <Text style={styles.goalLabelSmall}>{goal.label}</Text>
+                            {userProfile.preferredGoal === goal.id && (
+                                <View style={styles.selectedCheckmarkSmall}>
+                                    <Text style={styles.selectedCheckmarkText}>✓</Text>
                                 </View>
                             )}
                         </TouchableOpacity>
@@ -260,41 +287,44 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
     },
     subtitle: {
-        fontSize: 16,
+        fontSize: 15,
         color: '#94A3B8',
         marginTop: 4,
     },
     section: {
         marginHorizontal: 16,
-        marginBottom: 24,
+        marginBottom: 20,
         backgroundColor: '#1E293B',
         borderRadius: 16,
         padding: 20,
+        borderWidth: 1,
+        borderColor: '#2D3A52',
     },
     sectionTitle: {
         fontSize: 18,
-        fontWeight: '600',
+        fontWeight: '700',
         color: '#FFFFFF',
-        marginBottom: 4,
+        marginBottom: 6,
     },
     sectionDescription: {
-        fontSize: 14,
+        fontSize: 13,
         color: '#64748B',
         marginBottom: 16,
+        lineHeight: 18,
     },
     // Location cards
     locationCard: {
         backgroundColor: '#0F172A',
         borderRadius: 12,
-        padding: 16,
+        padding: 14,
         marginBottom: 10,
         borderWidth: 1,
         borderColor: '#334155',
     },
-    locationCardHeader: {
+    locationCardLeft: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 12,
+        marginBottom: 10,
     },
     locationCardIcon: {
         fontSize: 32,
@@ -325,7 +355,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#8B5CF6',
         paddingVertical: 10,
         paddingHorizontal: 16,
-        borderRadius: 8,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
         minHeight: 40,
@@ -341,7 +371,7 @@ const styles = StyleSheet.create({
     clearLocationButton: {
         backgroundColor: '#DC2626',
         paddingHorizontal: 14,
-        borderRadius: 8,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -353,14 +383,14 @@ const styles = StyleSheet.create({
     // Allergies
     inputRow: {
         flexDirection: 'row',
-        gap: 12,
+        gap: 10,
     },
     textInput: {
         flex: 1,
         backgroundColor: '#0F172A',
-        borderRadius: 10,
+        borderRadius: 12,
         padding: 14,
-        fontSize: 16,
+        fontSize: 14,
         color: '#FFFFFF',
         borderWidth: 1,
         borderColor: '#334155',
@@ -368,81 +398,125 @@ const styles = StyleSheet.create({
     addButton: {
         backgroundColor: '#8B5CF6',
         paddingHorizontal: 20,
-        borderRadius: 10,
+        borderRadius: 12,
         justifyContent: 'center',
     },
     addButtonText: {
         color: '#FFFFFF',
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '600',
     },
     allergiesList: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: 8,
-        marginTop: 16,
+        marginTop: 14,
     },
     allergyTag: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FEE2E2',
+        backgroundColor: 'rgba(34, 197, 94, 0.15)',
         paddingVertical: 8,
         paddingHorizontal: 14,
         borderRadius: 20,
         gap: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(34, 197, 94, 0.3)',
     },
     allergyText: {
-        color: '#DC2626',
+        color: '#4ADE80',
         fontSize: 14,
         fontWeight: '500',
     },
     removeIcon: {
-        color: '#DC2626',
-        fontSize: 14,
+        color: '#4ADE80',
+        fontSize: 12,
     },
     emptyText: {
         color: '#64748B',
         fontSize: 14,
         fontStyle: 'italic',
     },
-    // Goals
-    goalsGrid: {
-        gap: 12,
+    // Goals - row layout
+    goalsRow: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 10,
     },
     goalCard: {
-        flexDirection: 'row',
+        flex: 1,
         alignItems: 'center',
         backgroundColor: '#0F172A',
         padding: 16,
-        borderRadius: 12,
+        borderRadius: 14,
         borderWidth: 2,
         borderColor: 'transparent',
+        position: 'relative',
+    },
+    goalCardSmall: {
+        flex: 1,
+        alignItems: 'center',
+        backgroundColor: '#0F172A',
+        padding: 14,
+        borderRadius: 14,
+        borderWidth: 2,
+        borderColor: 'transparent',
+        position: 'relative',
     },
     goalCardSelected: {
-        borderColor: '#8B5CF6',
-        backgroundColor: '#1E293B',
+        borderColor: '#A855F7',
+        backgroundColor: '#2D3A52',
+        shadowColor: '#A855F7',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.4,
+        shadowRadius: 10,
+        elevation: 6,
     },
     goalIcon: {
+        fontSize: 32,
+        marginBottom: 8,
+    },
+    goalIconSmall: {
         fontSize: 28,
+        marginBottom: 6,
     },
     goalLabel: {
-        flex: 1,
-        fontSize: 16,
-        fontWeight: '500',
+        fontSize: 13,
+        fontWeight: '600',
         color: '#FFFFFF',
-        marginLeft: 12,
+        textAlign: 'center',
     },
-    selectedBadge: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        backgroundColor: '#8B5CF6',
+    goalLabelSmall: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#FFFFFF',
+        textAlign: 'center',
+    },
+    selectedCheckmark: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        width: 22,
+        height: 22,
+        borderRadius: 11,
+        backgroundColor: '#22C55E',
         alignItems: 'center',
         justifyContent: 'center',
     },
-    selectedBadgeText: {
+    selectedCheckmarkSmall: {
+        position: 'absolute',
+        top: 6,
+        right: 6,
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        backgroundColor: '#22C55E',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    selectedCheckmarkText: {
         color: '#FFFFFF',
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: 'bold',
     },
     aboutCard: {

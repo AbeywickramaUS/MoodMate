@@ -24,6 +24,14 @@ export default function TrendsScreen() {
         }
     };
 
+    const getRiskTitle = () => {
+        switch (currentRiskLevel) {
+            case 'high': return '⚠ High Risk';
+            case 'improving': return '📈 Improving';
+            default: return '✨ Stable';
+        }
+    };
+
     const getRiskDescription = () => {
         switch (currentRiskLevel) {
             case 'high':
@@ -37,6 +45,14 @@ export default function TrendsScreen() {
 
     const maxMoodCount = Math.max(...Object.values(weeklyStats.moodCounts), 1);
 
+    // Calculate happy percentage
+    const happyPercentage = weeklyStats.total > 0
+        ? Math.round((weeklyStats.moodCounts.happy / weeklyStats.total) * 100)
+        : 0;
+
+    // Find dominant happy mood emoji
+    const happyMood = MOODS.find(m => m.id === 'happy');
+
     return (
         <ScrollView style={styles.container}>
             <View style={styles.header}>
@@ -44,35 +60,47 @@ export default function TrendsScreen() {
                 <Text style={styles.subtitle}>Weekly mood analysis</Text>
             </View>
 
-            {/* Risk Status Card */}
-            <View style={[styles.riskCard, { borderColor: getRiskColor() }]}>
-                <View style={[styles.riskIndicator, { backgroundColor: getRiskColor() }]} />
-                <View style={styles.riskContent}>
-                    <Text style={styles.riskTitle}>
-                        {currentRiskLevel === 'high' ? '⚠️ High Risk' :
-                            currentRiskLevel === 'improving' ? '📈 Improving' : '✨ Stable'}
-                    </Text>
-                    <Text style={styles.riskDescription}>{getRiskDescription()}</Text>
-                </View>
+            {/* Risk Status Card with red glow */}
+            <View style={[
+                styles.riskCard,
+                {
+                    borderColor: getRiskColor(),
+                    backgroundColor: currentRiskLevel === 'high'
+                        ? 'rgba(239, 68, 68, 0.12)'
+                        : currentRiskLevel === 'improving'
+                            ? 'rgba(34, 197, 94, 0.12)'
+                            : 'rgba(59, 130, 246, 0.12)',
+                }
+            ]}>
+                {/* Red glow effect for high risk */}
+                {currentRiskLevel === 'high' && (
+                    <View style={styles.riskGlow} />
+                )}
+                <Text style={[styles.riskTitle, { color: getRiskColor() }]}>
+                    {getRiskTitle()}
+                </Text>
+                <Text style={styles.riskDescription}>{getRiskDescription()}</Text>
             </View>
 
-            {/* Weekly Summary */}
-            <View style={styles.summaryCard}>
-                <Text style={styles.sectionTitle}>Past 7 Days</Text>
-                <View style={styles.summaryStats}>
-                    <View style={styles.summaryStat}>
-                        <Text style={styles.summaryNumber}>{weeklyStats.total}</Text>
-                        <Text style={styles.summaryLabel}>Total Logs</Text>
+            {/* Weekly Summary - Two stat cards */}
+            <View style={styles.summaryRow}>
+                <View style={styles.summaryCard}>
+                    <View style={styles.summaryCardHeader}>
+                        <Text style={styles.summaryCardTitle}>Past 7 Days</Text>
+                        <Text style={styles.summaryCardIcon}>📊</Text>
                     </View>
-                    <View style={styles.summaryDivider} />
-                    <View style={styles.summaryStat}>
-                        <Text style={styles.summaryNumber}>
-                            {weeklyStats.total > 0
-                                ? Math.round((weeklyStats.moodCounts.happy / weeklyStats.total) * 100)
-                                : 0}%
+                    <Text style={styles.summaryNumber}>{weeklyStats.total}</Text>
+                    <Text style={styles.summaryLabel}>Total Logs</Text>
+                </View>
+                <View style={[styles.summaryCard, styles.summaryCardPurple]}>
+                    <View style={styles.summaryCardHeader}>
+                        <Text style={styles.summaryCardTitle}>
+                            {happyPercentage}%
                         </Text>
-                        <Text style={styles.summaryLabel}>Happy Moments</Text>
+                        <Text style={styles.summaryCardIcon}>{happyMood?.emoji || '😊'}</Text>
                     </View>
+                    <Text style={styles.summaryNumber}></Text>
+                    <Text style={styles.summaryLabel}>Happy</Text>
                 </View>
             </View>
 
@@ -89,12 +117,18 @@ export default function TrendsScreen() {
                             <Text style={styles.barEmoji}>{mood.emoji}</Text>
                             <Text style={styles.barLabel}>{mood.label}</Text>
                             <View style={styles.barContainer}>
-                                <View
-                                    style={[
-                                        styles.bar,
-                                        { width: `${percentage}%`, backgroundColor: mood.color }
-                                    ]}
-                                />
+                                {/* Segmented bar */}
+                                <View style={styles.barSegments}>
+                                    {Array.from({ length: Math.max(count, 0) }).map((_, i) => (
+                                        <View
+                                            key={i}
+                                            style={[
+                                                styles.barSegment,
+                                                { backgroundColor: mood.color }
+                                            ]}
+                                        />
+                                    ))}
+                                </View>
                             </View>
                             <Text style={styles.barCount}>{count}</Text>
                         </View>
@@ -102,7 +136,7 @@ export default function TrendsScreen() {
                 })}
             </View>
 
-            {/* Daily Pattern - Simple View */}
+            {/* Recent Activity */}
             <View style={styles.patternCard}>
                 <Text style={styles.sectionTitle}>Recent Activity</Text>
 
@@ -152,81 +186,98 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
     },
     subtitle: {
-        fontSize: 16,
+        fontSize: 15,
         color: '#94A3B8',
         marginTop: 4,
     },
+    // Risk card
     riskCard: {
         marginHorizontal: 16,
-        backgroundColor: '#1E293B',
         borderRadius: 16,
-        borderWidth: 2,
-        flexDirection: 'row',
+        borderWidth: 1.5,
+        padding: 20,
         overflow: 'hidden',
     },
-    riskIndicator: {
-        width: 6,
-    },
-    riskContent: {
-        flex: 1,
-        padding: 20,
+    riskGlow: {
+        position: 'absolute',
+        top: -40,
+        left: -20,
+        right: -20,
+        height: 100,
+        backgroundColor: 'rgba(239, 68, 68, 0.15)',
+        borderRadius: 50,
     },
     riskTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#FFFFFF',
+        marginBottom: 8,
     },
     riskDescription: {
         fontSize: 14,
-        color: '#94A3B8',
-        marginTop: 8,
+        color: '#CBD5E1',
         lineHeight: 20,
     },
+    // Summary row
+    summaryRow: {
+        flexDirection: 'row',
+        paddingHorizontal: 16,
+        gap: 12,
+        marginTop: 16,
+    },
     summaryCard: {
-        margin: 16,
+        flex: 1,
         backgroundColor: '#1E293B',
         borderRadius: 16,
-        padding: 20,
+        padding: 18,
+        borderWidth: 1,
+        borderColor: '#2D3A52',
     },
-    sectionTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#FFFFFF',
-        marginBottom: 16,
+    summaryCardPurple: {
+        borderColor: 'rgba(168, 85, 247, 0.3)',
     },
-    summaryStats: {
+    summaryCardHeader: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
+        marginBottom: 8,
     },
-    summaryStat: {
-        flex: 1,
-        alignItems: 'center',
+    summaryCardTitle: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#94A3B8',
+    },
+    summaryCardIcon: {
+        fontSize: 20,
     },
     summaryNumber: {
-        fontSize: 32,
+        fontSize: 36,
         fontWeight: 'bold',
         color: '#FFFFFF',
     },
     summaryLabel: {
-        fontSize: 12,
+        fontSize: 13,
         color: '#94A3B8',
         marginTop: 4,
     },
-    summaryDivider: {
-        width: 1,
-        height: 40,
-        backgroundColor: '#334155',
-    },
+    // Chart card
     chartCard: {
-        marginHorizontal: 16,
+        margin: 16,
         backgroundColor: '#1E293B',
         borderRadius: 16,
         padding: 20,
+        borderWidth: 1,
+        borderColor: '#2D3A52',
+    },
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        marginBottom: 18,
     },
     barRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 12,
+        marginBottom: 14,
     },
     barEmoji: {
         fontSize: 20,
@@ -235,31 +286,43 @@ const styles = StyleSheet.create({
     barLabel: {
         width: 100,
         fontSize: 14,
-        color: '#94A3B8',
+        color: '#CBD5E1',
+        fontWeight: '500',
     },
     barContainer: {
         flex: 1,
-        height: 12,
-        backgroundColor: '#334155',
-        borderRadius: 6,
+        height: 14,
+        backgroundColor: '#0F172A',
+        borderRadius: 7,
         overflow: 'hidden',
     },
-    bar: {
+    barSegments: {
+        flexDirection: 'row',
         height: '100%',
-        borderRadius: 6,
+        gap: 2,
+        paddingHorizontal: 2,
+        alignItems: 'center',
+    },
+    barSegment: {
+        width: 18,
+        height: 10,
+        borderRadius: 3,
     },
     barCount: {
         width: 30,
         textAlign: 'right',
         fontSize: 14,
         color: '#FFFFFF',
-        fontWeight: '600',
+        fontWeight: '700',
     },
+    // Recent activity
     patternCard: {
-        margin: 16,
+        marginHorizontal: 16,
         backgroundColor: '#1E293B',
         borderRadius: 16,
         padding: 20,
+        borderWidth: 1,
+        borderColor: '#2D3A52',
     },
     emptyText: {
         color: '#64748B',
@@ -268,30 +331,30 @@ const styles = StyleSheet.create({
         paddingVertical: 20,
     },
     recentEntries: {
-        gap: 12,
+        gap: 10,
     },
     entryRow: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#0F172A',
-        padding: 12,
-        borderRadius: 10,
+        padding: 14,
+        borderRadius: 12,
     },
     entryEmoji: {
         fontSize: 28,
     },
     entryInfo: {
-        marginLeft: 12,
+        marginLeft: 14,
     },
     entryMood: {
         fontSize: 16,
-        fontWeight: '500',
+        fontWeight: '600',
         color: '#FFFFFF',
     },
     entryDate: {
         fontSize: 12,
         color: '#64748B',
-        marginTop: 2,
+        marginTop: 3,
     },
     bottomPadding: {
         height: 40,

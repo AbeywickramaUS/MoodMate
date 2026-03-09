@@ -4,7 +4,8 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
-    ScrollView
+    ScrollView,
+    Dimensions,
 } from 'react-native';
 import { useApp } from '../context/AppContext';
 import {
@@ -13,6 +14,9 @@ import {
     getCurrentTimePeriod
 } from '../utils/recommendationEngine';
 import { MOODS, LOCATIONS, MoodType, LocationType } from '../data/features';
+import { isMusicRecommendation, getSongsForMood } from '../utils/songService';
+
+const { width } = Dimensions.get('window');
 
 export default function RecommendationScreen({ route, navigation }: any) {
     const { mood, location } = route.params as { mood: MoodType; location: LocationType };
@@ -20,6 +24,8 @@ export default function RecommendationScreen({ route, navigation }: any) {
     const [recommendation, setRecommendation] = useState('');
     const [rejectedRecommendations, setRejectedRecommendations] = useState<string[]>([]);
     const [accepted, setAccepted] = useState(false);
+    const [suggestedSongs, setSuggestedSongs] = useState<{title: string; artist: string; genre: string}[]>([]);
+    const [showSongs, setShowSongs] = useState(false);
 
     const moodData = MOODS.find(m => m.id === mood);
     const locationData = LOCATIONS.find(l => l.id === location);
@@ -43,6 +49,15 @@ export default function RecommendationScreen({ route, navigation }: any) {
             : getRecommendation(context);
 
         setRecommendation(rec);
+
+        // Check if recommendation mentions music
+        if (isMusicRecommendation(rec)) {
+            setShowSongs(true);
+            setSuggestedSongs(getSongsForMood(mood, 3));
+        } else {
+            setShowSongs(false);
+            setSuggestedSongs([]);
+        }
     };
 
     const handleReject = () => {
@@ -54,45 +69,51 @@ export default function RecommendationScreen({ route, navigation }: any) {
         setAccepted(true);
     };
 
-    const getRiskBadge = () => {
-        if (currentRiskLevel === 'high') {
-            return (
-                <View style={[styles.riskBadge, { backgroundColor: '#FEE2E2' }]}>
-                    <Text style={[styles.riskBadgeText, { color: '#DC2626' }]}>
-                        ⚠️ High Risk Week - Special Recommendation
-                    </Text>
-                </View>
-            );
-        }
-        return null;
+    const getMoodDisplayLabel = () => {
+        if (!moodData) return '';
+        // Map to match screenshot styling (e.g., "Content (Happ)")
+        return `${moodData.label}`;
     };
 
     return (
         <ScrollView style={styles.container}>
+            {/* Ambient glow */}
+            <View style={styles.ambientGlow1} />
+            <View style={styles.ambientGlow2} />
+
             <View style={styles.header}>
-                <Text style={styles.title}>Your Recommendation</Text>
+                <Text style={styles.title}>Your Recommendations</Text>
                 <Text style={styles.subtitle}>Based on your current state</Text>
             </View>
 
-            {/* Context Summary */}
-            <View style={styles.contextCard}>
-                <View style={styles.contextRow}>
-                    <View style={styles.contextItem}>
-                        <Text style={styles.contextEmoji}>{moodData?.emoji}</Text>
-                        <Text style={styles.contextLabel}>{moodData?.label}</Text>
-                    </View>
-                    <View style={styles.contextDivider} />
-                    <View style={styles.contextItem}>
-                        <Text style={styles.contextEmoji}>{locationData?.icon}</Text>
-                        <Text style={styles.contextLabel}>{locationData?.label}</Text>
-                    </View>
+            {/* Context Summary - Two cards side by side */}
+            <View style={styles.contextRow}>
+                <View style={styles.contextCard}>
+                    <Text style={styles.contextEmoji}>{moodData?.emoji}</Text>
+                    <Text style={styles.contextLabel}>
+                        {moodData?.label}
+                    </Text>
+                </View>
+                <View style={styles.contextCard}>
+                    <Text style={styles.contextEmoji}>{locationData?.icon}</Text>
+                    <Text style={styles.contextLabel}>
+                        At {locationData?.label} ({locationData?.label})
+                    </Text>
                 </View>
             </View>
 
-            {getRiskBadge()}
+            {/* Risk Badge */}
+            {currentRiskLevel === 'high' && (
+                <View style={styles.riskBadge}>
+                    <Text style={styles.riskBadgeText}>
+                        ⚠️ Special Recommendation - High-Risk Week
+                    </Text>
+                </View>
+            )}
 
             {/* Recommendation Card */}
             <View style={styles.recommendationCard}>
+                <View style={styles.recommendationGlow} />
                 <Text style={styles.recommendationIcon}>💡</Text>
                 <Text style={styles.recommendationText}>{recommendation}</Text>
 
@@ -118,6 +139,28 @@ export default function RecommendationScreen({ route, navigation }: any) {
                 )}
             </View>
 
+            {/* Song Recommendations */}
+            {showSongs && suggestedSongs.length > 0 && (
+                <View style={styles.songsSection}>
+                    <Text style={styles.songsSectionTitle}>🎵 Suggested Songs</Text>
+                    <Text style={styles.songsSectionSubtitle}>Based on your {moodData?.label?.toLowerCase()} mood</Text>
+                    {suggestedSongs.map((song, index) => (
+                        <View key={index} style={styles.songCard}>
+                            <View style={styles.songIconContainer}>
+                                <Text style={styles.songIcon}>🎵</Text>
+                            </View>
+                            <View style={styles.songInfo}>
+                                <Text style={styles.songTitle}>{song.title}</Text>
+                                <Text style={styles.songArtist}>{song.artist}</Text>
+                            </View>
+                            <View style={styles.genrePill}>
+                                <Text style={styles.genreText}>{song.genre}</Text>
+                            </View>
+                        </View>
+                    ))}
+                </View>
+            )}
+
             {/* Alternatives tried */}
             {rejectedRecommendations.length > 0 && (
                 <Text style={styles.alternativesCount}>
@@ -130,8 +173,10 @@ export default function RecommendationScreen({ route, navigation }: any) {
                 style={styles.homeButton}
                 onPress={() => navigation.navigate('MainTabs')}
             >
-                <Text style={styles.homeButtonText}>← Back to Home</Text>
+                <Text style={styles.homeButtonText}>← Return Home</Text>
             </TouchableOpacity>
+
+
         </ScrollView>
     );
 }
@@ -141,9 +186,29 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#0F172A',
     },
+    // Ambient glow effects
+    ambientGlow1: {
+        position: 'absolute',
+        top: -40,
+        right: -40,
+        width: 160,
+        height: 160,
+        borderRadius: 80,
+        backgroundColor: 'rgba(139, 92, 246, 0.12)',
+    },
+    ambientGlow2: {
+        position: 'absolute',
+        top: 100,
+        left: -60,
+        width: 180,
+        height: 180,
+        borderRadius: 90,
+        backgroundColor: 'rgba(59, 130, 246, 0.08)',
+    },
     header: {
         padding: 24,
         paddingTop: 60,
+        alignItems: 'center',
     },
     title: {
         fontSize: 28,
@@ -151,55 +216,75 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
     },
     subtitle: {
-        fontSize: 16,
+        fontSize: 15,
         color: '#94A3B8',
-        marginTop: 4,
+        marginTop: 6,
+    },
+    // Context cards
+    contextRow: {
+        flexDirection: 'row',
+        paddingHorizontal: 16,
+        gap: 12,
+        marginBottom: 16,
     },
     contextCard: {
-        marginHorizontal: 16,
+        flex: 1,
         backgroundColor: '#1E293B',
         borderRadius: 16,
         padding: 20,
-    },
-    contextRow: {
-        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-around',
-    },
-    contextItem: {
-        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#2D3A52',
     },
     contextEmoji: {
-        fontSize: 36,
+        fontSize: 48,
+        marginBottom: 8,
     },
     contextLabel: {
-        fontSize: 14,
+        fontSize: 13,
         color: '#94A3B8',
-        marginTop: 8,
+        textAlign: 'center',
+        fontWeight: '500',
     },
-    contextDivider: {
-        width: 1,
-        height: 40,
-        backgroundColor: '#334155',
-    },
+    // Risk badge
     riskBadge: {
         marginHorizontal: 16,
-        marginTop: 16,
-        padding: 12,
-        borderRadius: 8,
+        marginBottom: 16,
+        padding: 14,
+        borderRadius: 10,
+        backgroundColor: 'rgba(239, 68, 68, 0.15)',
+        borderWidth: 1,
+        borderColor: 'rgba(239, 68, 68, 0.3)',
     },
     riskBadgeText: {
         fontSize: 14,
         fontWeight: '600',
         textAlign: 'center',
+        color: '#FCA5A5',
     },
+    // Recommendation card with glow
     recommendationCard: {
         margin: 16,
         backgroundColor: '#1E293B',
         borderRadius: 20,
         padding: 24,
         borderWidth: 2,
-        borderColor: '#8B5CF6',
+        borderColor: '#A855F7',
+        shadowColor: '#A855F7',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.4,
+        shadowRadius: 16,
+        elevation: 10,
+    },
+    recommendationGlow: {
+        position: 'absolute',
+        top: -2,
+        left: -2,
+        right: -2,
+        bottom: -2,
+        borderRadius: 22,
+        borderWidth: 2,
+        borderColor: 'rgba(168, 85, 247, 0.2)',
     },
     recommendationIcon: {
         fontSize: 48,
@@ -207,9 +292,9 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     recommendationText: {
-        fontSize: 18,
-        color: '#FFFFFF',
-        lineHeight: 28,
+        fontSize: 16,
+        color: '#E2E8F0',
+        lineHeight: 26,
         textAlign: 'center',
     },
     actionButtons: {
@@ -221,8 +306,10 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#334155',
         padding: 14,
-        borderRadius: 10,
+        borderRadius: 12,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#475569',
     },
     rejectButtonText: {
         color: '#FFFFFF',
@@ -233,8 +320,13 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#22C55E',
         padding: 14,
-        borderRadius: 10,
+        borderRadius: 12,
         alignItems: 'center',
+        shadowColor: '#22C55E',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
     },
     acceptButtonText: {
         color: '#FFFFFF',
@@ -243,14 +335,17 @@ const styles = StyleSheet.create({
     },
     acceptedBadge: {
         marginTop: 20,
-        backgroundColor: '#166534',
+        backgroundColor: 'rgba(34, 197, 94, 0.15)',
         padding: 16,
-        borderRadius: 10,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(34, 197, 94, 0.3)',
     },
     acceptedText: {
-        color: '#FFFFFF',
+        color: '#4ADE80',
         fontSize: 16,
         textAlign: 'center',
+        fontWeight: '500',
     },
     alternativesCount: {
         textAlign: 'center',
@@ -264,12 +359,75 @@ const styles = StyleSheet.create({
         marginBottom: 40,
         padding: 16,
         borderRadius: 12,
-        borderWidth: 1,
-        borderColor: '#334155',
         alignItems: 'center',
     },
     homeButtonText: {
         color: '#94A3B8',
         fontSize: 16,
+        fontWeight: '500',
+    },
+    // Song recommendation styles
+    songsSection: {
+        marginHorizontal: 16,
+        marginTop: 8,
+    },
+    songsSectionTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        marginBottom: 4,
+    },
+    songsSectionSubtitle: {
+        fontSize: 13,
+        color: '#94A3B8',
+        marginBottom: 14,
+    },
+    songCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#1E293B',
+        borderRadius: 14,
+        padding: 14,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#2D3A52',
+    },
+    songIconContainer: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        backgroundColor: 'rgba(139, 92, 246, 0.15)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    songIcon: {
+        fontSize: 22,
+    },
+    songInfo: {
+        flex: 1,
+        marginLeft: 12,
+    },
+    songTitle: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#FFFFFF',
+    },
+    songArtist: {
+        fontSize: 13,
+        color: '#94A3B8',
+        marginTop: 2,
+    },
+    genrePill: {
+        backgroundColor: 'rgba(168, 85, 247, 0.15)',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(168, 85, 247, 0.3)',
+    },
+    genreText: {
+        fontSize: 11,
+        color: '#A78BFA',
+        fontWeight: '600',
     },
 });

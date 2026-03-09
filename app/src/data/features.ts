@@ -1,6 +1,7 @@
 // Feature options for MoodMate app
 export const MOODS = [
   { id: 'happy', label: 'Happy', emoji: '😊', color: '#4ADE80' },
+  { id: 'relaxed', label: 'Relaxed', emoji: '☺️', color: '#60A5FA' },
   { id: 'stress', label: 'Stress', emoji: '😰', color: '#F87171' },
   { id: 'worry', label: 'Worry', emoji: '😟', color: '#FBBF24' },
   { id: 'frustration', label: 'Frustration', emoji: '😤', color: '#FB923C' },

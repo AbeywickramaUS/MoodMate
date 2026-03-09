@@ -35,6 +35,7 @@ export function getRecommendation(context: UserContext): string {
     // Filter recommendations based on mood
     const moodKeywords: Record<MoodType, string[]> = {
         happy: ['enjoy', 'energizing', 'fun', 'dance', 'social'],
+        relaxed: ['relax', 'calm', 'peaceful', 'gentle', 'mindful', 'meditation'],
         stress: ['calming', 'grounding', 'meditation', 'relax', 'soothing'],
         worry: ['calming', 'grounding', 'reassure', 'gentle'],
         frustration: ['release', 'exercise', 'workout', 'channel'],
@@ -164,6 +165,7 @@ export function getWeeklyStats(moodHistory: MoodEntry[]) {
 
     const moodCounts: Record<string, number> = {
         happy: 0,
+        relaxed: 0,
         stress: 0,
         worry: 0,
         frustration: 0,

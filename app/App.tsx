@@ -19,23 +19,36 @@ const Tab = createBottomTabNavigator();
 function TabIcon({ label, focused }: { label: string; focused: boolean }) {
   const icons: Record<string, string> = {
     Home: '🏠',
-    Trends: '📈',
+    Trend: '📈',
     Profile: '⚙️',
   };
 
   return (
-    <View style={{ alignItems: 'center' }}>
-      <Text style={{ fontSize: 24 }}>{icons[label]}</Text>
+    <View style={{ alignItems: 'center', position: 'relative' }}>
+      <Text style={{ fontSize: 22 }}>{icons[label]}</Text>
       <Text style={{
-        fontSize: 10,
-        color: focused ? '#8B5CF6' : '#64748B',
-        marginTop: 2
+        fontSize: 11,
+        color: focused ? '#A78BFA' : '#64748B',
+        marginTop: 3,
+        fontWeight: focused ? '600' : '400',
       }}>
-        {label}
+        {label === 'Profile' ? 'Profil' : label}
       </Text>
+      {focused && (
+        <View style={{
+          position: 'absolute',
+          bottom: -8,
+          width: 20,
+          height: 2,
+          backgroundColor: '#A78BFA',
+          borderRadius: 1,
+        }} />
+      )}
     </View>
   );
 }
+
+
 
 function MainTabs() {
   return (
@@ -43,11 +56,13 @@ function MainTabs() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#1E293B',
-          borderTopColor: '#334155',
-          height: 70,
-          paddingBottom: 10,
-          paddingTop: 10,
+          backgroundColor: '#0F172A',
+          borderTopColor: '#1E293B',
+          borderTopWidth: 1,
+          height: 72,
+          paddingBottom: 8,
+          paddingTop: 8,
+          position: 'relative',
         },
         tabBarShowLabel: false,
       }}
@@ -63,7 +78,7 @@ function MainTabs() {
         name="Trends"
         component={TrendsScreen}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon label="Trends" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon label="Trend" focused={focused} />,
         }}
       />
       <Tab.Screen

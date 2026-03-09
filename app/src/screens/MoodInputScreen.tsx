@@ -7,6 +7,7 @@ import {
     ScrollView,
     Modal,
     ActivityIndicator,
+    Dimensions,
 } from 'react-native';
 import { useApp } from '../context/AppContext';
 import { useLocation } from '../context/LocationContext';
@@ -16,6 +17,8 @@ import {
     MoodType,
     LocationType
 } from '../data/features';
+
+const { width } = Dimensions.get('window');
 
 export default function MoodInputScreen({ navigation }: any) {
     const { addMoodEntry } = useApp();
@@ -78,7 +81,7 @@ export default function MoodInputScreen({ navigation }: any) {
             {/* Step Indicator */}
             <View style={styles.stepIndicator}>
                 <View style={[styles.stepDot, step >= 1 && styles.stepDotActive]} />
-                <View style={styles.stepLine} />
+                <View style={[styles.stepLine, step >= 2 && styles.stepLineActive]} />
                 <View style={[styles.stepDot, step >= 2 && styles.stepDotActive]} />
             </View>
 
@@ -90,9 +93,10 @@ export default function MoodInputScreen({ navigation }: any) {
                             key={mood.id}
                             style={[
                                 styles.moodCard,
-                                selectedMood === mood.id && { borderColor: mood.color, borderWidth: 3 }
+                                selectedMood === mood.id && styles.moodCardSelected,
                             ]}
                             onPress={() => handleMoodSelect(mood.id)}
+                            activeOpacity={0.7}
                         >
                             <Text style={styles.moodEmoji}>{mood.emoji}</Text>
                             <Text style={styles.moodLabel}>{mood.label}</Text>
@@ -134,11 +138,12 @@ export default function MoodInputScreen({ navigation }: any) {
                         </View>
                     ) : isLocationLoading ? (
                         <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color="#8B5CF6" />
+                            <ActivityIndicator size="large" color="#A78BFA" />
                             <Text style={styles.loadingText}>Detecting location...</Text>
                         </View>
                     ) : (
                         <View style={styles.detectedLocationCard}>
+                            <View style={styles.detectedLocationGlow} />
                             <View style={styles.detectedLocationHeader}>
                                 <Text style={styles.detectedLabel}>📍 Detected Location</Text>
                                 {isManualOverride && (
@@ -190,6 +195,7 @@ export default function MoodInputScreen({ navigation }: any) {
                     </TouchableOpacity>
                 </>
             )}
+
 
             {/* Manual Override Modal */}
             <Modal
@@ -250,10 +256,11 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
     },
     subtitle: {
-        fontSize: 16,
+        fontSize: 15,
         color: '#94A3B8',
         marginTop: 8,
     },
+    // Step indicator
     stepIndicator: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -262,20 +269,30 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     stepDot: {
-        width: 12,
-        height: 12,
-        borderRadius: 6,
+        width: 14,
+        height: 14,
+        borderRadius: 7,
         backgroundColor: '#334155',
     },
     stepDotActive: {
-        backgroundColor: '#8B5CF6',
+        backgroundColor: '#A78BFA',
+        shadowColor: '#A78BFA',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.6,
+        shadowRadius: 6,
+        elevation: 4,
     },
     stepLine: {
         flex: 1,
-        height: 2,
+        height: 3,
         backgroundColor: '#334155',
         marginHorizontal: 8,
+        borderRadius: 1.5,
     },
+    stepLineActive: {
+        backgroundColor: '#A78BFA',
+    },
+    // Mood grid
     optionsGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
@@ -286,11 +303,20 @@ const styles = StyleSheet.create({
     moodCard: {
         width: '45%',
         backgroundColor: '#1E293B',
-        padding: 20,
+        padding: 24,
         borderRadius: 16,
         alignItems: 'center',
         borderWidth: 2,
         borderColor: 'transparent',
+    },
+    moodCardSelected: {
+        borderColor: '#A855F7',
+        backgroundColor: '#2D3A52',
+        shadowColor: '#A855F7',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.6,
+        shadowRadius: 16,
+        elevation: 10,
     },
     moodEmoji: {
         fontSize: 48,
@@ -299,14 +325,15 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#FFFFFF',
-        marginTop: 8,
+        marginTop: 10,
     },
     moodColorDot: {
         width: 8,
         height: 8,
         borderRadius: 4,
-        marginTop: 8,
+        marginTop: 10,
     },
+    // Selected mood banner
     selectedMoodBanner: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -315,6 +342,8 @@ const styles = StyleSheet.create({
         padding: 16,
         borderRadius: 12,
         marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#2D3A52',
     },
     selectedMoodEmoji: {
         fontSize: 32,
@@ -324,9 +353,10 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#FFFFFF',
         marginLeft: 12,
+        fontWeight: '500',
     },
     changeButton: {
-        color: '#8B5CF6',
+        color: '#A78BFA',
         fontSize: 14,
         fontWeight: '600',
     },
@@ -338,7 +368,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#334155',
+        borderColor: '#2D3A52',
     },
     noLocationIcon: {
         fontSize: 48,
@@ -381,14 +411,30 @@ const styles = StyleSheet.create({
         color: '#94A3B8',
         marginTop: 16,
     },
-    // Detected location card
+    // Detected location card with glow
     detectedLocationCard: {
         margin: 16,
         padding: 20,
         backgroundColor: '#1E293B',
         borderRadius: 16,
         borderWidth: 2,
-        borderColor: '#8B5CF6',
+        borderColor: '#A855F7',
+        shadowColor: '#A855F7',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.5,
+        shadowRadius: 16,
+        elevation: 10,
+        overflow: 'visible',
+    },
+    detectedLocationGlow: {
+        position: 'absolute',
+        top: -2,
+        left: -2,
+        right: -2,
+        bottom: -2,
+        borderRadius: 18,
+        borderWidth: 2,
+        borderColor: 'rgba(168, 85, 247, 0.3)',
     },
     detectedLocationHeader: {
         flexDirection: 'row',
@@ -431,7 +477,7 @@ const styles = StyleSheet.create({
     },
     detectedStatus: {
         fontSize: 13,
-        color: '#8B5CF6',
+        color: '#A78BFA',
         marginTop: 4,
     },
     overrideButton: {
@@ -447,21 +493,28 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '500',
     },
+    // Submit button
     submitButton: {
         margin: 16,
         marginTop: 24,
         backgroundColor: '#8B5CF6',
         padding: 18,
-        borderRadius: 12,
+        borderRadius: 14,
         alignItems: 'center',
+        shadowColor: '#8B5CF6',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.5,
+        shadowRadius: 12,
+        elevation: 8,
     },
     submitButtonDisabled: {
         backgroundColor: '#4B5563',
+        shadowOpacity: 0,
     },
     submitButtonText: {
         color: '#FFFFFF',
         fontSize: 18,
-        fontWeight: '600',
+        fontWeight: '700',
     },
     // Modal styles
     modalOverlay: {
@@ -500,7 +553,7 @@ const styles = StyleSheet.create({
         borderColor: 'transparent',
     },
     modalLocationCardSelected: {
-        borderColor: '#8B5CF6',
+        borderColor: '#A855F7',
         backgroundColor: '#2D3A52',
     },
     modalLocationIcon: {
@@ -515,7 +568,7 @@ const styles = StyleSheet.create({
     },
     modalCheckmark: {
         fontSize: 20,
-        color: '#8B5CF6',
+        color: '#A78BFA',
         fontWeight: 'bold',
     },
     modalCancelButton: {

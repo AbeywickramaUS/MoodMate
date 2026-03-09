@@ -7,11 +7,57 @@ import {
     ScrollView,
     Dimensions
 } from 'react-native';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { useApp } from '../context/AppContext';
 import { useLocation } from '../context/LocationContext';
 import { MOODS, LOCATIONS } from '../data/features';
 
 const { width } = Dimensions.get('window');
+
+// Semi-circular gauge component
+function GaugeChart({ value, maxValue, label, size = 80 }: {
+    value: number;
+    maxValue: number;
+    label: string;
+    size?: number;
+}) {
+    const radius = size / 2 - 8;
+    const circumference = Math.PI * radius;
+    const percentage = maxValue > 0 ? Math.min(value / maxValue, 1) : 0;
+    const strokeDashoffset = circumference * (1 - percentage);
+    const centerX = size / 2;
+    const centerY = size / 2 + 4;
+
+    return (
+        <View style={{ alignItems: 'center' }}>
+            <Svg width={size} height={size / 2 + 12} viewBox={`0 0 ${size} ${size / 2 + 12}`}>
+                {/* Background arc */}
+                <Path
+                    d={`M ${centerX - radius} ${centerY} A ${radius} ${radius} 0 0 1 ${centerX + radius} ${centerY}`}
+                    fill="none"
+                    stroke="#334155"
+                    strokeWidth={6}
+                    strokeLinecap="round"
+                />
+                {/* Progress arc */}
+                <Path
+                    d={`M ${centerX - radius} ${centerY} A ${radius} ${radius} 0 0 1 ${centerX + radius} ${centerY}`}
+                    fill="none"
+                    stroke="#A78BFA"
+                    strokeWidth={6}
+                    strokeLinecap="round"
+                    strokeDasharray={`${circumference}`}
+                    strokeDashoffset={strokeDashoffset}
+                />
+                {/* End dots */}
+                <Circle cx={centerX - radius} cy={centerY} r={3} fill="#334155" />
+                <Circle cx={centerX + radius} cy={centerY} r={3} fill="#A78BFA" />
+            </Svg>
+            <Text style={styles.gaugeValue}>{value}</Text>
+            <Text style={styles.gaugeLabel}>{label}</Text>
+        </View>
+    );
+}
 
 export default function HomeScreen({ navigation }: any) {
     const { moodHistory, currentRiskLevel } = useApp();
@@ -28,11 +74,19 @@ export default function HomeScreen({ navigation }: any) {
         }
     };
 
-    const getRiskEmoji = () => {
+    const getRiskText = () => {
         switch (currentRiskLevel) {
-            case 'high': return '⚠️';
-            case 'improving': return '📈';
-            default: return '✨';
+            case 'high': return 'High Risk';
+            case 'improving': return 'Improving';
+            default: return 'Stable';
+        }
+    };
+
+    const getRiskDescription = () => {
+        switch (currentRiskLevel) {
+            case 'high': return 'Learn more about managing this status.';
+            case 'improving': return 'Great progress on your wellness journey!';
+            default: return 'Your mood is looking stable.';
         }
     };
 
@@ -49,74 +103,93 @@ export default function HomeScreen({ navigation }: any) {
 
     return (
         <ScrollView style={styles.container}>
+            {/* Ambient glow effects */}
+            <View style={styles.ambientGlow1} />
+            <View style={styles.ambientGlow2} />
+            <View style={styles.ambientGlow3} />
+
             <View style={styles.header}>
                 <Text style={styles.greeting}>Hello! 👋</Text>
                 <Text style={styles.subtitle}>How are you feeling today?</Text>
             </View>
 
-            {/* Risk Level Card */}
-            <View style={[styles.riskCard, { borderColor: getRiskColor() }]}>
-                <Text style={styles.riskEmoji}>{getRiskEmoji()}</Text>
-                <View style={styles.riskInfo}>
-                    <Text style={styles.riskLabel}>Current Status</Text>
-                    <Text style={[styles.riskLevel, { color: getRiskColor() }]}>
-                        {currentRiskLevel === 'high' ? 'High Risk' :
-                            currentRiskLevel === 'improving' ? 'Improving' : 'Stable'}
-                    </Text>
-                </View>
-            </View>
+            {/* Health & Mood Dashboard Card */}
+            <View style={styles.dashboardCard}>
+                <Text style={styles.dashboardTitle}>Health & Mood Dashboard</Text>
 
-            {/* Current Location Card */}
-            <View style={styles.locationCard}>
-                <Text style={styles.locationCardIcon}>
-                    {hasSavedLocations ? currentLocationData?.icon : '📍'}
-                </Text>
-                <View style={styles.locationCardInfoHome}>
-                    <Text style={styles.locationCardLabel}>Currently at</Text>
-                    <Text style={styles.locationCardName}>
-                        {hasSavedLocations
-                            ? currentLocationData?.label || 'Unknown'
-                            : 'Location not set'}
-                    </Text>
-                </View>
-                {isManualOverride && (
-                    <View style={styles.manualBadge}>
-                        <Text style={styles.manualBadgeText}>Manual</Text>
+                {/* Risk Status */}
+                <View style={[styles.riskCard, { borderColor: getRiskColor() }]}>
+                    <View style={styles.riskLeft}>
+                        <Text style={styles.riskIcon}>⚠️</Text>
+                        <View>
+                            <Text style={styles.riskStatusLabel}>Current Status:</Text>
+                            <Text style={[styles.riskStatusValue, { color: getRiskColor() }]}>
+                                {getRiskText()}
+                            </Text>
+                        </View>
                     </View>
-                )}
-            </View>
-
-            {/* Leave Meeting Room Button */}
-            {currentLocation === 'meeting_room' && (
-                <TouchableOpacity
-                    style={styles.leaveMeetingButton}
-                    onPress={leaveMeetingRoom}
-                >
-                    <Text style={styles.leaveMeetingButtonText}>
-                        🚪 Leave Meeting Room
-                    </Text>
-                </TouchableOpacity>
-            )}
-
-            {/* Quick Stats */}
-            <View style={styles.statsRow}>
-                <View style={styles.statCard}>
-                    <Text style={styles.statNumber}>{todayEntries.length}</Text>
-                    <Text style={styles.statLabel}>Today's Logs</Text>
+                    <Text style={styles.riskDescription}>{getRiskDescription()}</Text>
                 </View>
-                <View style={styles.statCard}>
-                    <Text style={styles.statNumber}>{moodHistory.length}</Text>
-                    <Text style={styles.statLabel}>Total Entries</Text>
+
+                {/* Current Location */}
+                <View style={styles.locationRow}>
+                    <Text style={styles.locationIcon}>
+                        {hasSavedLocations ? currentLocationData?.icon : '📍'}
+                    </Text>
+                    <View style={styles.locationInfo}>
+                        <Text style={styles.locationLabel}>Currently at</Text>
+                        <Text style={styles.locationName}>
+                            {hasSavedLocations
+                                ? currentLocationData?.label || 'Unknown'
+                                : 'Location not set'}
+                        </Text>
+                    </View>
+                    {isManualOverride && (
+                        <View style={styles.manualBadge}>
+                            <Text style={styles.manualBadgeText}>Manual</Text>
+                        </View>
+                    )}
+                </View>
+
+                {/* Leave Meeting Room Button */}
+                {currentLocation === 'meeting_room' && (
+                    <TouchableOpacity
+                        style={styles.leaveMeetingButton}
+                        onPress={leaveMeetingRoom}
+                    >
+                        <Text style={styles.leaveMeetingButtonText}>
+                            🚪 Leave Meeting Room
+                        </Text>
+                    </TouchableOpacity>
+                )}
+
+                {/* Dashboard Stats */}
+                <View style={styles.statsSection}>
+                    <Text style={styles.statsTitle}>Dashboard Stats</Text>
+                    <View style={styles.statsRow}>
+                        <GaugeChart
+                            value={todayEntries.length}
+                            maxValue={Math.max(todayEntries.length, 10)}
+                            label="Logs Today"
+                            size={100}
+                        />
+                        <GaugeChart
+                            value={moodHistory.length}
+                            maxValue={Math.max(moodHistory.length, 20)}
+                            label="Total Logs"
+                            size={100}
+                        />
+                    </View>
                 </View>
             </View>
 
             {/* Last Mood */}
             {lastMood && (
                 <View style={styles.lastMoodCard}>
-                    <Text style={styles.sectionTitle}>Last Recorded Mood</Text>
-                    <View style={styles.moodDisplay}>
-                        <Text style={styles.moodEmoji}>{lastMood.emoji}</Text>
-                        <Text style={styles.moodLabel}>{lastMood.label}</Text>
+                    <Text style={styles.lastMoodEmoji}>{lastMood.emoji}</Text>
+                    <View style={styles.lastMoodInfo}>
+                        <Text style={styles.lastMoodLabel}>Last Recorded Mood</Text>
+                        <Text style={styles.lastMoodName}>{lastMood.label}</Text>
                     </View>
                 </View>
             )}
@@ -153,6 +226,34 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#0F172A',
     },
+    // Ambient glow effects
+    ambientGlow1: {
+        position: 'absolute',
+        top: -60,
+        left: -40,
+        width: 200,
+        height: 200,
+        borderRadius: 100,
+        backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    },
+    ambientGlow2: {
+        position: 'absolute',
+        top: -30,
+        right: -60,
+        width: 180,
+        height: 180,
+        borderRadius: 90,
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    },
+    ambientGlow3: {
+        position: 'absolute',
+        top: 40,
+        left: width / 3,
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: 'rgba(34, 197, 94, 0.08)',
+    },
     header: {
         padding: 24,
         paddingTop: 60,
@@ -163,69 +264,77 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
     },
     subtitle: {
-        fontSize: 18,
+        fontSize: 16,
         color: '#94A3B8',
         marginTop: 4,
     },
-    riskCard: {
+    // Dashboard card
+    dashboardCard: {
         margin: 16,
         marginTop: 8,
+        backgroundColor: '#1E293B',
+        borderRadius: 20,
         padding: 20,
-        backgroundColor: '#1E293B',
-        borderRadius: 16,
-        borderWidth: 2,
+        borderWidth: 1,
+        borderColor: '#2D3A52',
+    },
+    dashboardTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        marginBottom: 16,
+    },
+    // Risk card inside dashboard
+    riskCard: {
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        borderRadius: 12,
+        padding: 16,
+        borderWidth: 1.5,
+        marginBottom: 16,
+    },
+    riskLeft: {
         flexDirection: 'row',
         alignItems: 'center',
+        gap: 10,
+        marginBottom: 6,
     },
-    riskEmoji: {
-        fontSize: 40,
+    riskIcon: {
+        fontSize: 24,
     },
-    riskInfo: {
-        marginLeft: 16,
-    },
-    riskLabel: {
-        fontSize: 14,
+    riskStatusLabel: {
+        fontSize: 13,
         color: '#94A3B8',
     },
-    riskLevel: {
-        fontSize: 24,
+    riskStatusValue: {
+        fontSize: 18,
         fontWeight: 'bold',
-        marginTop: 4,
     },
-    locationCard: {
-        margin: 16,
-        marginTop: 12,
-        padding: 16,
-        backgroundColor: '#1E293B',
-        borderRadius: 12,
+    riskDescription: {
+        fontSize: 13,
+        color: '#94A3B8',
+        lineHeight: 18,
+    },
+    // Location row
+    locationRow: {
         flexDirection: 'row',
         alignItems: 'center',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#2D3A52',
+        marginBottom: 12,
     },
-    leaveMeetingButton: {
-        marginHorizontal: 16,
-        marginTop: 8,
-        backgroundColor: '#DC2626',
-        padding: 14,
-        borderRadius: 10,
-        alignItems: 'center',
+    locationIcon: {
+        fontSize: 36,
     },
-    leaveMeetingButtonText: {
-        color: '#FFFFFF',
-        fontSize: 15,
-        fontWeight: '600',
-    },
-    locationCardIcon: {
-        fontSize: 32,
-    },
-    locationCardInfoHome: {
+    locationInfo: {
         marginLeft: 12,
         flex: 1,
     },
-    locationCardLabel: {
-        fontSize: 12,
+    locationLabel: {
+        fontSize: 13,
         color: '#94A3B8',
     },
-    locationCardName: {
+    locationName: {
         fontSize: 18,
         fontWeight: '600',
         color: '#FFFFFF',
@@ -242,64 +351,92 @@ const styles = StyleSheet.create({
         fontSize: 11,
         fontWeight: '600',
     },
+    leaveMeetingButton: {
+        backgroundColor: '#DC2626',
+        padding: 12,
+        borderRadius: 10,
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    leaveMeetingButtonText: {
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    // Stats section
+    statsSection: {
+        paddingTop: 4,
+    },
+    statsTitle: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#94A3B8',
+        marginBottom: 12,
+    },
     statsRow: {
         flexDirection: 'row',
-        paddingHorizontal: 16,
-        gap: 12,
+        justifyContent: 'space-around',
+        alignItems: 'flex-end',
     },
-    statCard: {
-        flex: 1,
-        backgroundColor: '#1E293B',
-        padding: 16,
-        borderRadius: 12,
-        alignItems: 'center',
-    },
-    statNumber: {
+    gaugeValue: {
         fontSize: 28,
         fontWeight: 'bold',
         color: '#FFFFFF',
+        marginTop: -8,
     },
-    statLabel: {
+    gaugeLabel: {
         fontSize: 12,
         color: '#94A3B8',
         marginTop: 4,
     },
+    // Last mood card
     lastMoodCard: {
-        margin: 16,
-        padding: 20,
+        marginHorizontal: 16,
+        marginTop: 12,
+        padding: 16,
         backgroundColor: '#1E293B',
         borderRadius: 16,
-    },
-    sectionTitle: {
-        fontSize: 14,
-        color: '#94A3B8',
-        marginBottom: 12,
-    },
-    moodDisplay: {
         flexDirection: 'row',
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#2D3A52',
     },
-    moodEmoji: {
+    lastMoodEmoji: {
         fontSize: 40,
     },
-    moodLabel: {
-        fontSize: 24,
-        fontWeight: '600',
-        color: '#FFFFFF',
-        marginLeft: 12,
+    lastMoodInfo: {
+        marginLeft: 14,
     },
+    lastMoodLabel: {
+        fontSize: 13,
+        color: '#94A3B8',
+    },
+    lastMoodName: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        marginTop: 2,
+    },
+    // Primary button
     primaryButton: {
         margin: 16,
+        marginTop: 20,
         backgroundColor: '#8B5CF6',
         padding: 18,
-        borderRadius: 12,
+        borderRadius: 14,
         alignItems: 'center',
+        shadowColor: '#8B5CF6',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
+        elevation: 8,
     },
     primaryButtonText: {
         color: '#FFFFFF',
         fontSize: 18,
-        fontWeight: '600',
+        fontWeight: '700',
     },
+    // Secondary buttons
     actionsRow: {
         flexDirection: 'row',
         paddingHorizontal: 16,
@@ -312,10 +449,12 @@ const styles = StyleSheet.create({
         padding: 16,
         borderRadius: 12,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#2D3A52',
     },
     secondaryButtonText: {
         color: '#FFFFFF',
         fontSize: 14,
-        fontWeight: '500',
+        fontWeight: '600',
     },
 });
