@@ -29,9 +29,9 @@ model = MoodMateModel()
 
 try:
     model.load()
-    print("\n✅ ML Model loaded successfully!")
+    print("\n[SUCCESS] ML Model loaded successfully!")
 except FileNotFoundError as e:
-    print(f"\n⚠️  {e}")
+    print(f"\n[WARNING]  {e}")
     print("   Run 'python train_model.py' to generate model files.\n")
 
 
