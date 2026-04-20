@@ -15,6 +15,8 @@ import {
 } from '../utils/recommendationEngine';
 import { MOODS, LOCATIONS, MoodType, LocationType } from '../data/features';
 import { isMusicRecommendation, getSongsForMood } from '../utils/songService';
+import { getSuggestedActivities } from '../utils/activityService';
+import { Activity, ActivityCategory, ACTIVITY_CATEGORIES } from '../data/activities';
 
 const { width } = Dimensions.get('window');
 
@@ -26,13 +28,26 @@ export default function RecommendationScreen({ route, navigation }: any) {
     const [accepted, setAccepted] = useState(false);
     const [suggestedSongs, setSuggestedSongs] = useState<{title: string; artist: string; genre: string}[]>([]);
     const [showSongs, setShowSongs] = useState(false);
+    const [suggestedActivities, setSuggestedActivities] = useState<Activity[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<ActivityCategory | 'all'>('all');
 
     const moodData = MOODS.find(m => m.id === mood);
     const locationData = LOCATIONS.find(l => l.id === location);
 
     useEffect(() => {
         generateRecommendation();
+        generateActivities();
     }, []);
+
+    const generateActivities = () => {
+        const activities = getSuggestedActivities({
+            mood,
+            location,
+            timePeriod: getCurrentTimePeriod(),
+            allergies: userProfile.allergies,
+        }, 3, 12);
+        setSuggestedActivities(activities);
+    };
 
     const generateRecommendation = () => {
         const context = {
@@ -166,6 +181,99 @@ export default function RecommendationScreen({ route, navigation }: any) {
                 <Text style={styles.alternativesCount}>
                     {rejectedRecommendations.length} alternative{rejectedRecommendations.length > 1 ? 's' : ''} tried
                 </Text>
+            )}
+
+            {/* Suggested Activities Section */}
+            {suggestedActivities.length > 0 && (
+                <View style={styles.activitiesSection}>
+                    <Text style={styles.activitiesSectionTitle}>🎯 Suggested Activities</Text>
+                    <Text style={styles.activitiesSectionSubtitle}>
+                        Based on your {moodData?.label?.toLowerCase()} mood at {locationData?.label?.toLowerCase()}
+                    </Text>
+
+                    {/* Category Filter Tabs */}
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        style={styles.categoryTabs}
+                        contentContainerStyle={styles.categoryTabsContent}
+                    >
+                        <TouchableOpacity
+                            style={[
+                                styles.categoryPill,
+                                selectedCategory === 'all' && styles.categoryPillActive,
+                            ]}
+                            onPress={() => setSelectedCategory('all')}
+                        >
+                            <Text style={[
+                                styles.categoryPillText,
+                                selectedCategory === 'all' && styles.categoryPillTextActive,
+                            ]}>All</Text>
+                        </TouchableOpacity>
+                        {ACTIVITY_CATEGORIES.map(cat => {
+                            const count = suggestedActivities.filter(a => a.category === cat.id).length;
+                            if (count === 0) return null;
+                            return (
+                                <TouchableOpacity
+                                    key={cat.id}
+                                    style={[
+                                        styles.categoryPill,
+                                        selectedCategory === cat.id && [
+                                            styles.categoryPillActive,
+                                            { backgroundColor: cat.color + '25', borderColor: cat.color + '60' },
+                                        ],
+                                    ]}
+                                    onPress={() => setSelectedCategory(cat.id)}
+                                >
+                                    <Text style={[
+                                        styles.categoryPillText,
+                                        selectedCategory === cat.id && { color: cat.color },
+                                    ]}>{cat.icon} {cat.label}</Text>
+                                    <View style={[styles.countBadge, { backgroundColor: cat.color + '30' }]}>
+                                        <Text style={[styles.countBadgeText, { color: cat.color }]}>{count}</Text>
+                                    </View>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </ScrollView>
+
+                    {/* Activity Cards */}
+                    {suggestedActivities
+                        .filter(a => selectedCategory === 'all' || a.category === selectedCategory)
+                        .map(activity => {
+                            const catData = ACTIVITY_CATEGORIES.find(c => c.id === activity.category);
+                            return (
+                                <View key={activity.id} style={styles.activityCard}>
+                                    <View style={[
+                                        styles.activityIconContainer,
+                                        { backgroundColor: (catData?.color || '#A855F7') + '18' },
+                                    ]}>
+                                        <Text style={styles.activityIcon}>{activity.icon}</Text>
+                                    </View>
+                                    <View style={styles.activityInfo}>
+                                        <Text style={styles.activityTitle}>{activity.title}</Text>
+                                        <Text style={styles.activityDescription} numberOfLines={2}>
+                                            {activity.description}
+                                        </Text>
+                                        <View style={styles.activityMeta}>
+                                            <View style={styles.durationBadge}>
+                                                <Text style={styles.durationText}>⏱ {activity.duration}</Text>
+                                            </View>
+                                            <View style={[
+                                                styles.categoryTag,
+                                                { backgroundColor: (catData?.color || '#A855F7') + '18' },
+                                            ]}>
+                                                <Text style={[
+                                                    styles.categoryTagText,
+                                                    { color: catData?.color || '#A855F7' },
+                                                ]}>{catData?.label}</Text>
+                                            </View>
+                                        </View>
+                                    </View>
+                                </View>
+                            );
+                        })}
+                </View>
             )}
 
             {/* Navigation */}
@@ -428,6 +536,124 @@ const styles = StyleSheet.create({
     genreText: {
         fontSize: 11,
         color: '#A78BFA',
+        fontWeight: '600',
+    },
+    // Activity suggestion styles
+    activitiesSection: {
+        marginHorizontal: 16,
+        marginTop: 20,
+    },
+    activitiesSectionTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        marginBottom: 4,
+    },
+    activitiesSectionSubtitle: {
+        fontSize: 13,
+        color: '#94A3B8',
+        marginBottom: 16,
+    },
+    categoryTabs: {
+        marginBottom: 16,
+    },
+    categoryTabsContent: {
+        gap: 8,
+    },
+    categoryPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#1E293B',
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#2D3A52',
+        gap: 6,
+    },
+    categoryPillActive: {
+        backgroundColor: 'rgba(168, 85, 247, 0.15)',
+        borderColor: 'rgba(168, 85, 247, 0.4)',
+    },
+    categoryPillText: {
+        fontSize: 13,
+        color: '#94A3B8',
+        fontWeight: '600',
+    },
+    categoryPillTextActive: {
+        color: '#A855F7',
+    },
+    countBadge: {
+        backgroundColor: 'rgba(168, 85, 247, 0.2)',
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    countBadgeText: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#A855F7',
+    },
+    activityCard: {
+        flexDirection: 'row',
+        backgroundColor: '#1E293B',
+        borderRadius: 16,
+        padding: 14,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#2D3A52',
+    },
+    activityIconContainer: {
+        width: 50,
+        height: 50,
+        borderRadius: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    activityIcon: {
+        fontSize: 24,
+    },
+    activityInfo: {
+        flex: 1,
+        marginLeft: 12,
+    },
+    activityTitle: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#FFFFFF',
+        marginBottom: 3,
+    },
+    activityDescription: {
+        fontSize: 12,
+        color: '#94A3B8',
+        lineHeight: 17,
+        marginBottom: 8,
+    },
+    activityMeta: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    durationBadge: {
+        backgroundColor: 'rgba(148, 163, 184, 0.12)',
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 8,
+    },
+    durationText: {
+        fontSize: 11,
+        color: '#94A3B8',
+        fontWeight: '500',
+    },
+    categoryTag: {
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 8,
+    },
+    categoryTagText: {
+        fontSize: 11,
         fontWeight: '600',
     },
 });
