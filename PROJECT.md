@@ -1,6 +1,6 @@
 # MoodMate - Mood Tracking & Wellness App
 
-A React Native mobile application for mood tracking, personalized wellness recommendations, and mental health trend visualization.
+A Flutter mobile application for mood tracking, personalized wellness recommendations, and mental health trend visualization.
 
 ---
 
@@ -11,8 +11,8 @@ A React Native mobile application for mood tracking, personalized wellness recom
 | **App Name** | MoodMate |
 | **Package ID** | `com.moodmate.app` |
 | **Version** | 1.0.0 |
-| **Platform** | Android & iOS |
-| **Framework** | React Native with Expo |
+| **Platform** | Android, iOS & Web |
+| **Framework** | Flutter (Dart) |
 
 ---
 
@@ -22,35 +22,17 @@ A React Native mobile application for mood tracking, personalized wellness recom
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| **React** | 19.1.0 | UI Component Library |
-| **React Native** | 0.81.5 | Cross-platform Mobile Framework |
-| **Expo SDK** | ~54.0.6 | Development & Build Platform |
-| **TypeScript** | ~5.9.2 | Type-safe JavaScript |
+| **Flutter** | 3.x | Cross-platform UI Framework |
+| **Dart** | >=3.0.0 <4.0.0 | Programming Language |
 
-### Navigation
+### Dependencies
 
 | Library | Version | Purpose |
 |---------|---------|---------|
-| `@react-navigation/native` | ^7.1.28 | Core Navigation |
-| `@react-navigation/bottom-tabs` | ^7.10.1 | Tab Navigation |
-| `@react-navigation/native-stack` | ^7.11.0 | Stack Navigation |
-
-### Data & Storage
-
-| Library | Version | Purpose |
-|---------|---------|---------|
-| `@react-native-async-storage/async-storage` | ^2.2.0 | Local Data Persistence |
-
-### UI & Visualization
-
-| Library | Version | Purpose |
-|---------|---------|---------|
-| `react-native-chart-kit` | ^6.12.0 | Charts & Graphs |
-| `react-native-svg` | 15.12.1 | SVG Rendering |
-| `react-native-vector-icons` | ^10.3.0 | Icon Library |
-| `react-native-safe-area-context` | ^5.6.2 | Safe Area Handling |
-| `react-native-screens` | ~4.16.0 | Native Screen Containers |
-| `expo-status-bar` | ~3.0.9 | Status Bar Control |
+| `provider` | ^6.1.5+1 | State Management |
+| `shared_preferences` | ^2.5.5 | Local Data Persistence |
+| `fl_chart` | ^1.2.0 | Charts & Graphs |
+| `flutter_svg` | ^2.2.4 | SVG Rendering |
 
 ---
 
@@ -58,74 +40,86 @@ A React Native mobile application for mood tracking, personalized wellness recom
 
 ```
 MoodMate/
-├── app/                          # Main Application
-│   ├── App.tsx                   # Root Component & Navigation Setup
-│   ├── index.ts                  # Entry Point
-│   ├── app.json                  # Expo Configuration
-│   ├── package.json              # Dependencies
-│   ├── tsconfig.json             # TypeScript Config
-│   ├── assets/                   # Images & Icons
-│   └── src/
-│       ├── components/           # Reusable UI Components
-│       ├── context/
-│       │   └── AppContext.tsx    # Global State Management
-│       ├── data/
-│       │   ├── features.ts       # Feature Constants & Types
-│       │   └── recommendations.json  # Recommendation Database
-│       ├── screens/
-│       │   ├── HomeScreen.tsx          # Main Dashboard
-│       │   ├── MoodInputScreen.tsx     # Mood Entry Form
-│       │   ├── RecommendationScreen.tsx # AI Recommendations
-│       │   ├── TrendsScreen.tsx        # Weekly Analytics
-│       │   └── ProfileScreen.tsx       # User Settings
-│       └── utils/
-│           └── recommendationEngine.ts # AI Logic
-├── model.pkl                     # ML Model Data (828MB)
-├── preprocessor.pkl              # Data Preprocessor
-└── instruction.md                # Project Instructions
+├── moodmate_flutter/              # Flutter Application
+│   ├── lib/
+│   │   ├── main.dart              # Entry Point & Navigation Setup
+│   │   ├── data/
+│   │   │   ├── features.dart      # Feature Constants (Moods, Locations, Goals)
+│   │   │   ├── recommendations.dart  # Recommendation Database
+│   │   │   ├── songs.dart         # Song Database
+│   │   │   └── activities.dart    # Activity Definitions
+│   │   ├── models/
+│   │   │   └── mood_entry.dart    # MoodEntry Data Model
+│   │   ├── screens/
+│   │   │   ├── home_screen.dart          # Main Dashboard
+│   │   │   ├── mood_input_screen.dart    # Mood Entry Form (2-step)
+│   │   │   ├── recommendation_screen.dart # AI Recommendations
+│   │   │   ├── trends_screen.dart        # Weekly Analytics
+│   │   │   └── profile_screen.dart       # User Settings
+│   │   ├── state/
+│   │   │   └── app_state.dart     # Global State (Provider)
+│   │   └── utils/
+│   │       ├── recommendation_engine.dart # AI Scoring Logic
+│   │       ├── song_service.dart          # Music Suggestions
+│   │       └── activity_service.dart      # Activity Matching
+│   ├── pubspec.yaml               # Dependencies
+│   └── test/                      # Tests
+├── backend/                       # Python ML Backend
+│   ├── model.pkl                  # Trained ML Model
+│   ├── preprocessor.pkl           # Data Preprocessor
+│   └── README.md                  # Backend Docs
+├── app/                           # Original React Native App (Legacy)
+│   └── src/                       # Source files
+├── instruction.md                 # Project Instructions
+└── PROJECT.md                     # This file
 ```
 
 ---
 
 ## 📱 Screens & Interfaces
 
-### 1. Home Screen (`HomeScreen.tsx`)
+### 1. Home Screen (`home_screen.dart`)
 - **Purpose**: Main dashboard displaying current mood status
 - **Features**:
-  - Current risk level indicator
-  - Quick mood logging button
-  - Recent mood history preview
-  - Time-based greeting
+  - Time-based greeting with ambient glow effects
+  - Health & Mood Dashboard card
+  - Current risk level indicator (High/Stable/Improving)
+  - Semi-circular gauge charts (Logs Today, Total Logs)
+  - Last recorded mood display
+  - Quick action buttons (Log Mood, View Trends, Settings)
 
-### 2. Mood Input Screen (`MoodInputScreen.tsx`)
+### 2. Mood Input Screen (`mood_input_screen.dart`)
 - **Purpose**: Log user's current mood and location
 - **Features**:
-  - Mood selection (5 mood types)
-  - Location context selection
-  - Slide-from-bottom animation
+  - 2-step flow with step indicator
+  - Mood selection grid (6 mood types with emojis)
+  - Location selection (Home/Office/Meeting Room)
+  - Navigate to recommendations on submit
 
-### 3. Recommendation Screen (`RecommendationScreen.tsx`)
+### 3. Recommendation Screen (`recommendation_screen.dart`)
 - **Purpose**: Display personalized wellness recommendations
 - **Features**:
-  - Context-aware suggestions
+  - Context summary cards (mood + location)
+  - AI-powered recommendation with scoring algorithm
+  - Accept/Reject with alternative generation
+  - Music recommendations when applicable
+  - Suggested activities with category filters
   - Allergy-filtered recommendations
-  - Alternative recommendation option
-  - Slide-from-right animation
 
-### 4. Trends Screen (`TrendsScreen.tsx`)
+### 4. Trends Screen (`trends_screen.dart`)
 - **Purpose**: Weekly mood analytics and visualization
 - **Features**:
-  - Mood distribution charts
-  - Weekly summary statistics
-  - Risk level trends
-  - Visual data representations
+  - Risk status card with color coding
+  - Weekly summary (total logs, happy percentage)
+  - Mood distribution bar chart
+  - Recent activity log
 
-### 5. Profile Screen (`ProfileScreen.tsx`)
+### 5. Profile Screen (`profile_screen.dart`)
 - **Purpose**: User settings and preferences
 - **Features**:
-  - Allergy management
-  - Preferred goal selection
-  - App settings
+  - Allergy management (add/remove with persistence)
+  - Goal selection grid (Relaxation, Productivity, Social, Learning, Exercise)
+  - About section with version info
 
 ---
 
@@ -136,16 +130,18 @@ MoodMate/
 | Element | Color Code | Usage |
 |---------|------------|-------|
 | Background Primary | `#0F172A` | Main background |
-| Background Secondary | `#1E293B` | Tab bar, cards |
-| Border Color | `#334155` | Separators |
-| Accent Purple | `#8B5CF6` | Active state |
-| Text Secondary | `#64748B` | Inactive text |
+| Background Secondary | `#1E293B` | Cards, tab bar |
+| Border Color | `#2D3A52` | Card borders |
+| Accent Purple | `#8B5CF6` | Primary actions |
+| Active Indicator | `#A78BFA` | Active tab, selections |
+| Text Secondary | `#94A3B8` | Subtitles, labels |
 
 ### Mood Colors
 
 | Mood | Emoji | Color |
 |------|-------|-------|
 | Happy | 😊 | `#4ADE80` (Green) |
+| Relaxed | ☺️ | `#60A5FA` (Blue) |
 | Stress | 😰 | `#F87171` (Red) |
 | Worry | 😟 | `#FBBF24` (Yellow) |
 | Frustration | 😤 | `#FB923C` (Orange) |
@@ -155,31 +151,23 @@ MoodMate/
 
 ## 🧠 Data Models & Types
 
-### MoodEntry Interface
-```typescript
-interface MoodEntry {
-    id: string;
-    mood: MoodType;
-    timestamp: number;
-    location: LocationType;
-    riskLevel: 'low' | 'medium' | 'high';
+### MoodEntry
+```dart
+class MoodEntry {
+    String id;
+    String mood;       // 'happy', 'relaxed', 'stress', 'worry', 'frustration', 'disappointment'
+    int timestamp;
+    String location;   // 'home', 'office', 'meeting_room'
+    String riskLevel;  // 'low', 'medium', 'high'
 }
 ```
 
-### UserProfile Interface
-```typescript
-interface UserProfile {
-    allergies: string[];
-    preferredGoal: UserGoalType;
+### UserProfile
+```dart
+class UserProfile {
+    List<String> allergies;
+    String preferredGoal; // 'relaxation', 'productivity', 'social', 'learning', 'exercise'
 }
-```
-
-### Type Definitions
-```typescript
-type MoodType = 'happy' | 'stress' | 'worry' | 'frustration' | 'disappointment';
-type LocationType = 'home' | 'office' | 'meeting_room';
-type TimePeriodType = 'morning' | 'afternoon' | 'evening' | 'night';
-type UserGoalType = 'relaxation' | 'productivity' | 'social' | 'learning' | 'exercise';
 ```
 
 ---
@@ -187,43 +175,53 @@ type UserGoalType = 'relaxation' | 'productivity' | 'social' | 'learning' | 'exe
 ## ⚙️ Core Features
 
 ### 1. Mood Tracking
-- Log current emotional state with 5 mood options
+- Log current emotional state with 6 mood options
 - Capture location context (Home/Office/Meeting Room)
 - Automatic timestamp recording
-- Persistent storage using AsyncStorage
+- Persistent storage using SharedPreferences
 
 ### 2. AI Recommendation Engine
-- Context-aware recommendation matching
-- Location-based filtering
-- Mood-based keyword matching
-- Allergy filtering to exclude triggering suggestions
-- Alternative recommendation generation
+- Context-aware recommendation matching (mood + location + time)
+- Location-based keyword scoring (+2 points per match)
+- Mood-based keyword scoring (+3 points per match)
+- Allergy filtering (-100 points if allergen detected)
+- Alternative recommendation generation on rejection
 
 ### 3. Risk Level Assessment
 - Analyzes mood history from last 7 days
 - Calculates negative mood ratio
-- Tracks improvement trends
+- Tracks improvement trends (first half vs second half comparison)
 - Returns: `high` | `stable` | `improving`
 
-### 4. Weekly Analytics
+### 4. Activity Suggestions
+- Scored matching based on mood, location, time period
+- Category filters: Exercise, Relaxation, Games & Fun, Outdoor
+- Duration indicators and allergy-aware filtering
+
+### 5. Music Recommendations
+- Auto-detects music-related recommendations
+- Mood-based song suggestions from built-in database
+- Displays song title, artist, and genre
+
+### 6. Weekly Analytics
 - Mood distribution visualization
 - Total mood entries count
-- Trend analysis
-- Visual charts using react-native-chart-kit
+- Happy percentage tracking
+- Recent activity log with timestamps
 
 ---
 
 ## 🔧 State Management
 
-### AppContext (`AppContext.tsx`)
-Global state provider using React Context API:
+### AppState (Provider + ChangeNotifier)
+Global state provider using Flutter Provider pattern:
 
 | State | Type | Description |
 |-------|------|-------------|
-| `moodHistory` | `MoodEntry[]` | All logged moods |
+| `moodHistory` | `List<MoodEntry>` | All logged moods |
 | `userProfile` | `UserProfile` | User preferences |
-| `currentRiskLevel` | `string` | Current risk assessment |
-| `isLoading` | `boolean` | Loading state |
+| `currentRiskLevel` | `String` | Computed risk assessment |
+| `isLoading` | `bool` | Loading state |
 
 ### Available Actions
 - `addMoodEntry(mood, location)` - Log new mood
@@ -231,11 +229,9 @@ Global state provider using React Context API:
 - `updatePreferredGoal(goal)` - Change wellness goal
 
 ### Storage Keys
-```typescript
-const STORAGE_KEYS = {
-    MOOD_HISTORY: '@moodmate_mood_history',
-    USER_PROFILE: '@moodmate_user_profile',
-};
+```dart
+const String _moodHistoryKey = '@moodmate_mood_history';
+const String _userProfileKey = '@moodmate_user_profile';
 ```
 
 ---
@@ -243,38 +239,33 @@ const STORAGE_KEYS = {
 ## 🚀 Running the App
 
 ### Prerequisites
-- Node.js (v18+)
-- npm or yarn
-- Expo CLI
-- Expo Go app on mobile device
+- Flutter SDK (3.x+)
+- Dart SDK (>=3.0.0)
 
 ### Installation
 ```bash
-# Navigate to app directory
-cd "d:\sheha\RP\mobile app\MoodMate\app"
+# Navigate to Flutter app directory
+cd "d:\sheha\RP\mobile app\MoodMate\moodmate_flutter"
 
 # Install dependencies
-npm install
+flutter pub get
 ```
 
 ### Development Commands
 
 | Command | Description |
 |---------|-------------|
-| `npx expo start` | Start in LAN mode |
-| `npx expo start --tunnel` | Start with tunnel (remote access) |
-| `npx expo start --clear` | Start with cleared cache |
-| `npx expo start --android` | Start Android emulator |
-| `npx expo start --ios` | Start iOS simulator |
+| `flutter run -d edge` | Run on Edge browser |
+| `flutter run -d chrome` | Run on Chrome browser |
+| `flutter run -d windows` | Run as Windows desktop app |
+| `flutter run -d android` | Run on Android device/emulator |
+| `flutter run -d ios` | Run on iOS simulator |
 
-### Tunnel Mode Setup
-```bash
-# Install ngrok globally (one-time)
-npm install -g @expo/ngrok@^4.1.0
-
-# Run with tunnel
-npx expo start --tunnel
-```
+### Hot Reload
+While the app is running, press:
+- `r` — Hot reload (preserves state)
+- `R` — Hot restart (resets state)
+- `q` — Quit
 
 ---
 
@@ -289,6 +280,7 @@ The recommendation engine uses a scoring system:
 
 2. **Mood Matching** (+3 points per keyword match)
    - Happy: `enjoy, energizing, fun, dance, social`
+   - Relaxed: `relax, calm, peaceful, gentle, mindful, meditation`
    - Stress: `calming, grounding, meditation, relax, soothing`
    - Worry: `calming, grounding, reassure, gentle`
    - Frustration: `release, exercise, workout, channel`
@@ -298,25 +290,20 @@ The recommendation engine uses a scoring system:
 
 ---
 
-## 📦 Build Configuration
+## 📝 Migration Notes
 
-### app.json Settings
-```json
-{
-  "expo": {
-    "name": "MoodMate",
-    "slug": "moodmate",
-    "orientation": "portrait",
-    "userInterfaceStyle": "dark",
-    "newArchEnabled": true
-  }
-}
-```
+This app was originally built with React Native + Expo SDK and has been migrated to Flutter.
 
-### Platform-Specific
-- **iOS Bundle ID**: `com.moodmate.app`
-- **Android Package**: `com.moodmate.app`
-- **Splash Background**: `#0F172A`
+### What Changed
+- **Framework**: React Native → Flutter
+- **Language**: TypeScript → Dart
+- **State Management**: React Context → Provider + ChangeNotifier
+- **Storage**: AsyncStorage → SharedPreferences
+- **Navigation**: React Navigation → Flutter Navigator with bottom tabs
+- **Location**: expo-location GPS tracking → Manual location selection
+
+### Original React Native Files (Legacy)
+The `app/` directory contains the original React Native source code for reference.
 
 ---
 
@@ -326,4 +313,4 @@ This project is private and proprietary.
 
 ---
 
-*Documentation generated on January 31, 2026*
+*Documentation updated on April 18, 2026 — Flutter Migration*
